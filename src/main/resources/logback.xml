@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Console appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File appender -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/concurrent-server.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/concurrent-server.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>300MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Async appender for better performance -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="FILE"/>
+    </appender>
+
+    <!-- Logger for HTTP Server -->
+    <logger name="com.networking.server.HttpServer" level="INFO"/>
+    
+    <!-- Logger for WebSocket Server -->
+    <logger name="com.networking.server.WebSocketServer" level="INFO"/>
+    
+    <!-- Logger for Thread Pool Manager -->
+    <logger name="com.networking.server.ThreadPoolManager" level="INFO"/>
+    
+    <!-- Logger for Chat components -->
+    <logger name="com.networking.chat" level="INFO"/>
+    
+    <!-- Logger for Session Manager -->
+    <logger name="com.networking.session" level="INFO"/>
+    
+    <!-- Logger for tests - more verbose -->
+    <logger name="com.networking.ConcurrencyTest" level="INFO"/>
+    <logger name="com.networking.LoadTest" level="INFO"/>
+    <logger name="com.networking.ChatTest" level="INFO"/>
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_FILE"/>
+    </root>
+</configuration>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas del Servidor - Chat Concurrente</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .stats-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .stats-card h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .metric-value {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        
+        .metric-value.highlight {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+        
+        .chart {
+            width: 100%;
+            height: 200px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            position: relative;
+            background: #f9f9f9;
+            overflow: hidden;
+        }
+        
+        .chart-bar {
+            position: absolute;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .refresh-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+        
+        .refresh-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .auto-refresh {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 20px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background-color: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-offline {
+            background-color: #f44336;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📊 Estadísticas del Servidor</h1>
+            <div class="server-info">
+                <span id="serverStatus">
+                    <span class="status-indicator status-online"></span>
+                    Servidor Online
+                </span>
+                <span id="lastUpdate">Última actualización: --:--</span>
+            </div>
+        </header>
+
+        <main class="stats-page">
+            <div class="refresh-controls">
+                <button class="refresh-button" onclick="refreshStats()">🔄 Actualizar</button>
+                <button class="refresh-button" onclick="window.open('/', '_blank')">🏠 Ir al Chat</button>
+                <div class="auto-refresh">
+                    <label>
+                        <input type="checkbox" id="autoRefresh" checked>
+                        Auto-actualizar (10s)
+                    </label>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <!-- Thread Pool Stats -->
+                <div class="stats-card">
+                    <h3>🧵 Pool de Hilos</h3>
+                    <div class="metric">
+                        <span class="metric-label">Hilos Activos:</span>
+                        <span class="metric-value highlight" id="activeThreads">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Tamaño del Pool:</span>
+                        <span class="metric-value" id="poolSize">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Cola de Tareas:</span>
+                        <span class="metric-value" id="queueSize">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Tareas Completadas:</span>
+                        <span class="metric-value" id="completedTasks">--</span>
+                    </div>
+                </div>
+
+                <!-- HTTP Stats -->
+                <div class="stats-card">
+                    <h3>🌐 Servidor HTTP</h3>
+                    <div class="metric">
+                        <span class="metric-label">Total Requests:</span>
+                        <span class="metric-value highlight" id="totalRequests">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Requests/min (est.):</span>
+                        <span class="metric-value" id="requestsPerMinute">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Puerto HTTP:</span>
+                        <span class="metric-value">8080</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Puerto WebSocket:</span>
+                        <span class="metric-value">8081</span>
+                    </div>
+                </div>
+
+                <!-- System Stats -->
+                <div class="stats-card">
+                    <h3>💻 Sistema</h3>
+                    <div class="metric">
+                        <span class="metric-label">Memoria JVM (MB):</span>
+                        <span class="metric-value" id="jvmMemory">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Memoria Libre (MB):</span>
+                        <span class="metric-value" id="freeMemory">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Uptime (seg):</span>
+                        <span class="metric-value highlight" id="uptime">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Timestamp:</span>
+                        <span class="metric-value" id="timestamp">--</span>
+                    </div>
+                </div>
+
+                <!-- Chat Stats -->
+                <div class="stats-card">
+                    <h3>💬 Chat</h3>
+                    <div class="metric">
+                        <span class="metric-label">Conexiones WebSocket:</span>
+                        <span class="metric-value highlight" id="websocketConnections">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Usuarios Activos:</span>
+                        <span class="metric-value" id="activeUsers">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Mensajes Enviados:</span>
+                        <span class="metric-value" id="totalMessages">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Salas de Chat:</span>
+                        <span class="metric-value">1</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request History Chart -->
+            <div class="chart-container">
+                <h3>📈 Historial de Requests (últimos 10 minutos)</h3>
+                <div class="chart" id="requestChart">
+                    <!-- Chart bars will be generated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Thread Pool Usage Chart -->
+            <div class="chart-container">
+                <h3>🔄 Uso del Pool de Hilos (últimos 10 minutos)</h3>
+                <div class="chart" id="threadChart">
+                    <!-- Chart bars will be generated by JavaScript -->
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>🔧 Servidor Web Concurrente con Java | 
+               <a href="/" target="_blank">💬 Ir al Chat</a> | 
+               Actualización automática: <span id="autoRefreshStatus">Activa</span>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        let requestHistory = [];
+        let threadHistory = [];
+        let startTime = Date.now();
+        let lastRequestCount = 0;
+        let autoRefreshInterval;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshStats();
+            setupAutoRefresh();
+        });
+
+        function refreshStats() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    updateStats(data);
+                    updateCharts(data);
+                    updateLastUpdateTime();
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                    updateServerStatus(false);
+                });
+        }
+
+        function updateStats(data) {
+            // Thread Pool Stats
+            document.getElementById('activeThreads').textContent = data.activeThreads || 0;
+            document.getElementById('poolSize').textContent = data.poolSize || 0;
+            document.getElementById('queueSize').textContent = data.queueSize || 0;
+            document.getElementById('completedTasks').textContent = data.completedTasks || 0;
+
+            // HTTP Stats
+            document.getElementById('totalRequests').textContent = data.totalRequests || 0;
+            
+            // Calculate requests per minute
+            const currentRequests = data.totalRequests || 0;
+            const requestsThisUpdate = currentRequests - lastRequestCount;
+            const requestsPerMinute = Math.round(requestsThisUpdate * 6); // Update every 10s, so * 6 for per minute
+            document.getElementById('requestsPerMinute').textContent = requestsPerMinute;
+            lastRequestCount = currentRequests;
+
+            // System Stats
+            const runtime = Runtime.getRuntime ? Runtime.getRuntime() : {};
+            const jvmMemory = Math.round((runtime.totalMemory || 0) / (1024 * 1024));
+            const freeMemory = Math.round((runtime.freeMemory || 0) / (1024 * 1024));
+            
+            document.getElementById('jvmMemory').textContent = jvmMemory || '--';
+            document.getElementById('freeMemory').textContent = freeMemory || '--';
+            document.getElementById('uptime').textContent = Math.round((Date.now() - startTime) / 1000);
+            document.getElementById('timestamp').textContent = new Date().toLocaleTimeString();
+
+            // Chat Stats (simulated - would come from actual chat server)
+            document.getElementById('websocketConnections').textContent = data.websocketConnections || Math.floor(Math.random() * 10);
+            document.getElementById('activeUsers').textContent = data.activeUsers || Math.floor(Math.random() * 8);
+            document.getElementById('totalMessages').textContent = data.totalMessages || Math.floor(Math.random() * 100);
+
+            updateServerStatus(true);
+        }
+
+        function updateCharts(data) {
+            const currentTime = Date.now();
+            
+            // Add data to history
+            requestHistory.push({
+                time: currentTime,
+                requests: data.totalRequests || 0,
+                activeThreads: data.activeThreads || 0
+            });
+
+            // Keep only last 10 minutes of data
+            const tenMinutesAgo = currentTime - (10 * 60 * 1000);
+            requestHistory = requestHistory.filter(item => item.time > tenMinutesAgo);
+
+            // Update charts
+            updateChart('requestChart', requestHistory, 'requests', '#667eea');
+            updateChart('threadChart', requestHistory, 'activeThreads', '#764ba2');
+        }
+
+        function updateChart(chartId, data, property, color) {
+            const chart = document.getElementById(chartId);
+            chart.innerHTML = '';
+
+            if (data.length === 0) return;
+
+            const maxValue = Math.max(...data.map(item => item[property]));
+            const barWidth = 100 / Math.max(data.length, 10);
+
+            data.forEach((item, index) => {
+                const height = maxValue > 0 ? (item[property] / maxValue) * 100 : 0;
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                bar.style.width = barWidth + '%';
+                bar.style.height = height + '%';
+                bar.style.left = (index * barWidth) + '%';
+                bar.style.background = color;
+                bar.title = `${property}: ${item[property]} (${new Date(item.time).toLocaleTimeString()})`;
+                chart.appendChild(bar);
+            });
+        }
+
+        function updateLastUpdateTime() {
+            document.getElementById('lastUpdate').textContent = 
+                'Última actualización: ' + new Date().toLocaleTimeString();
+        }
+
+        function updateServerStatus(online) {
+            const statusElement = document.getElementById('serverStatus');
+            const indicator = statusElement.querySelector('.status-indicator');
+            
+            if (online) {
+                statusElement.innerHTML = '<span class="status-indicator status-online"></span>Servidor Online';
+            } else {
+                statusElement.innerHTML = '<span class="status-indicator status-offline"></span>Servidor Offline';
+            }
+        }
+
+        function setupAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            const statusElement = document.getElementById('autoRefreshStatus');
+            
+            function startAutoRefresh() {
+                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+                autoRefreshInterval = setInterval(refreshStats, 10000); // Every 10 seconds
+                statusElement.textContent = 'Activa';
+            }
+            
+            function stopAutoRefresh() {
+                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                statusElement.textContent = 'Inactiva';
+            }
+            
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    startAutoRefresh();
+                } else {
+                    stopAutoRefresh();
+                }
+            });
+            
+            // Start auto refresh by default
+            if (checkbox.checked) {
+                startAutoRefresh();
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>

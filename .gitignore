@@ -1,0 +1,46 @@
+# Archivos de Maven
+target/
+*.jar
+*.war
+*.ear
+*.class
+
+# Archivos de IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# Archivos de log
+logs/
+*.log
+*.log.*
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# Archivos de backup
+*.bak
+*.backup
+*~
+
+# Archivos de configuración local
+application-local.properties
+config-local.yml
+
+# Archivos de test
+test-results/
+coverage/
+
+# Node modules (si se usa para herramientas de build)
+node_modules/
+
+# Archivos de dependencias
+dependency-reduced-pom.xml

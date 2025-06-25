@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servidor Web Concurrente - Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>💬 Chat Concurrente</h1>
+            <div class="server-info">
+                <span class="status-indicator" id="connectionStatus">🔴 Desconectado</span>
+                <span class="user-count" id="userCount">👥 0 usuarios</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Pantalla de bienvenida -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-card">
+                    <h2>¡Bienvenido al Chat!</h2>
+                    <p>Este es un chat en tiempo real construido con un servidor web concurrente en Java.</p>
+                    
+                    <div class="features">
+                        <div class="feature">
+                            <span class="feature-icon">🚀</span>
+                            <div>
+                                <h3>Servidor Concurrente</h3>
+                                <p>Utiliza pools de hilos para manejar múltiples conexiones simultáneas</p>
+                            </div>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">⚡</span>
+                            <div>
+                                <h3>Tiempo Real</h3>
+                                <p>Comunicación instantánea usando WebSockets nativos</p>
+                            </div>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">👥</span>
+                            <div>
+                                <h3>Multi-usuario</h3>
+                                <p>Soporte para múltiples usuarios conectados simultáneamente</p>
+                            </div>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🔒</span>
+                            <div>
+                                <h3>Sesiones Seguras</h3>
+                                <p>Manejo de cookies y sesiones de usuario</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="join-form">
+                        <input type="text" id="usernameInput" placeholder="Ingresa tu nombre de usuario" maxlength="20" autocomplete="off">
+                        <button id="joinButton">🚀 Entrar al Chat</button>
+                    </div>
+
+                    <div class="stats" id="serverStats">
+                        <h3>📊 Estadísticas del Servidor</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Hilos Activos:</span>
+                                <span class="stat-value" id="activeThreads">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Pool Size:</span>
+                                <span class="stat-value" id="poolSize">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Cola:</span>
+                                <span class="stat-value" id="queueSize">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Requests:</span>
+                                <span class="stat-value" id="totalRequests">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pantalla del chat -->
+            <div class="chat-screen hidden" id="chatScreen">
+                <div class="chat-container">
+                    <div class="chat-sidebar">
+                        <div class="users-section">
+                            <h3>👥 Usuarios Conectados</h3>
+                            <div class="users-list" id="usersList">
+                                <!-- Usuarios se cargarán dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-main">
+                        <div class="messages-container" id="messagesContainer">
+                            <div class="welcome-message">
+                                <h3>¡Bienvenido al chat!</h3>
+                                <p>Este chat utiliza WebSockets para comunicación en tiempo real.</p>
+                            </div>
+                        </div>
+
+                        <div class="message-input-container">
+                            <div class="input-wrapper">
+                                <input type="text" id="messageInput" placeholder="Escribe tu mensaje..." maxlength="500" autocomplete="off">
+                                <button id="sendButton">📤 Enviar</button>
+                            </div>
+                            <div class="input-info">
+                                <span id="typingIndicator"></span>
+                                <span id="characterCount">0/500</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>🔧 Servidor Web Concurrente con Java | 
+               <a href="/api/stats" target="_blank">📊 Ver Estadísticas</a> | 
+               <span id="uptimeInfo">Tiempo activo: calculando...</span>
+            </p>
+        </footer>
+    </div>
+
+    <script src="chat.js"></script>
+</body>
+</html>
